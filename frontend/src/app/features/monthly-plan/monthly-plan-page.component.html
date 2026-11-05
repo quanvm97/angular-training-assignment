@@ -1,0 +1,96 @@
+<main class="plan-page">
+  <app-family-finance-shell activeItem="planning">
+    <section class="plan-content" aria-labelledby="plan-title">
+      <a class="back-link" routerLink="/monthly-planning"><span aria-hidden="true">‹</span> Back to monthly planning</a>
+      <h1 id="plan-title">Month Budget Summary</h1>
+
+      @if (view(); as state) {
+        @if (state.status !== 'invalid-route') {
+          <label class="month-label" for="plan-month">
+            Plan month
+            <input id="plan-month" type="month" [value]="monthValue()" (change)="changeMonth($event)" />
+          </label>
+        }
+
+        @switch (state.status) {
+          @case ('loading') {
+            <p class="state-panel" role="status">Loading this month's allocation…</p>
+          }
+          @case ('invalid-route') {
+            <div class="state-panel" role="alert">
+              <p>That month is not valid.</p>
+              <a routerLink="/monthly-planning">Go to monthly planning</a>
+            </div>
+          }
+          @case ('not-found') {
+            <div class="state-panel" role="status">
+              <p>{{ state.message }}</p>
+              <p>Create the plan before viewing its allocation. No amounts are shown until the plan exists.</p>
+              <a routerLink="/monthly-planning">Create a monthly plan</a>
+            </div>
+          }
+          @case ('invalid-data') {
+            <div class="state-panel" role="alert">
+              <p>The plan response did not match the expected seven-jar contract.</p>
+              <button type="button" class="retry-button" (click)="retry()">Try again</button>
+            </div>
+          }
+          @case ('error') {
+            <div class="state-panel" role="alert">
+              <p>{{ state.message }}</p>
+              <button type="button" class="retry-button" (click)="retry()">Try again</button>
+            </div>
+          }
+          @case ('ready') {
+            <section class="summary" aria-labelledby="summary-heading">
+              <div class="income">
+                <div class="income-icon" aria-hidden="true">₫</div>
+                <div id="summary-heading" class="income-label">Total monthly income</div>
+                <div class="income-value">{{ formatVnd(state.plan.monthlyIncomeVnd) }}</div>
+                <div class="income-meta">Monthly plan for {{ periodLabel(state.plan) }} · VND</div>
+              </div>
+              <div class="allocation">
+                <div
+                  class="donut"
+                  role="img"
+                  aria-label="100 percent allocated across seven jars"
+                  [style.background]="allocationDonut(state.plan.jars)"
+                >
+                  <div class="donut-label"><strong>100%</strong><span>allocated</span></div>
+                </div>
+                <div class="legend" aria-label="Jar allocation legend">
+                  @for (jar of state.plan.jars; track jar.jarType) {
+                    <div class="legend-item">
+                      <span class="legend-name" [class]="'legend-name jar-' + jarClass(jar.jarType)">{{ jar.name }}</span>
+                      <span class="legend-rate">{{ jar.percentage }}%</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </section>
+
+            <section aria-labelledby="jars-heading">
+              <div class="section-heading">
+                <div>
+                  <h2 id="jars-heading" class="section-title">The Seven Jars</h2>
+                  <p class="section-copy">Budgets below are the amounts returned by the server.</p>
+                </div>
+                <a [routerLink]="['/monthly-plans', state.plan.year, state.plan.month, 'spending']">View spending</a>
+              </div>
+              <div class="jar-grid">
+                @for (jar of state.plan.jars; track jar.jarType) {
+                  <article class="jar-card" [class]="'jar-card jar-' + jarClass(jar.jarType)">
+                    <div class="jar-name">{{ jar.name }}</div>
+                    <div class="jar-rate">{{ jar.percentage }}%</div>
+                    <div class="jar-amount">{{ formatVnd(jar.budgetVnd) }}</div>
+                    <div class="meter" aria-hidden="true"><span [style.width.%]="jar.percentage"></span></div>
+                  </article>
+                }
+              </div>
+            </section>
+          }
+        }
+      }
+    </section>
+  </app-family-finance-shell>
+</main>

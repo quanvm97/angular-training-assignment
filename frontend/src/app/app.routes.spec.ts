@@ -7,6 +7,7 @@ describe('routes', () => {
     expect(routes).toEqual([
       expect.objectContaining({ path: '', redirectTo: 'monthly-planning' }),
       expect.objectContaining({ path: 'monthly-planning' }),
+      expect.objectContaining({ path: 'monthly-plans/:year/:month' }),
       expect.objectContaining({ path: '**', redirectTo: 'monthly-planning' })
     ]);
   });
