@@ -1,0 +1,27 @@
+<div class="refreshed-jar-list">
+  @for (jar of jars(); track jar.jarType) {
+    <div class="refreshed-jar-row">
+      <div class="refreshed-jar-heading">
+        <strong>{{ jar.jarName }}</strong>
+        <span>
+          {{ formatPercent(jar.percentageUsed) }}
+          @if (isOverBudget(jar.percentageUsed)) {
+            <span class="over-budget-label">Over budget</span>
+          }
+        </span>
+      </div>
+      <div
+        class="refreshed-progress"
+        [class.over-budget]="isOverBudget(jar.percentageUsed)"
+        role="progressbar"
+        aria-valuemin="0"
+        [attr.aria-valuemax]="100"
+        [attr.aria-valuenow]="progressWidth(jar.percentageUsed)"
+        [attr.aria-label]="label(jar)"
+      >
+        <span [style.width.%]="progressWidth(jar.percentageUsed)"></span>
+      </div>
+      <small>{{ formatVnd(jar.spentBudgetVnd) }} / {{ formatVnd(jar.plannedBudgetVnd) }}</small>
+    </div>
+  }
+</div>

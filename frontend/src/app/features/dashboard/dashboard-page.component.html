@@ -1,0 +1,122 @@
+<main class="dashboard-page">
+  <app-family-finance-shell activeItem="dashboard" [expenseDate]="expenseDate()">
+    <section class="welcome" aria-labelledby="dashboard-title">
+      <div>
+        <p class="eyebrow">{{ todayLabel }}</p>
+        <h1 id="dashboard-title">{{ greeting }}</h1>
+        <p class="welcome-copy">Here is your family finance snapshot for the selected month.</p>
+        <label class="dashboard-month-label" for="dashboard-month">
+          Month
+          <input id="dashboard-month" type="month" [value]="monthValue()" (change)="changeMonth($event)" />
+        </label>
+      </div>
+      <a class="primary-link" routerLink="/monthly-planning">Plan this month</a>
+    </section>
+
+    @if (view(); as state) {
+      @switch (state.status) {
+        @case ('loading') {
+          <p class="state-panel" role="status">Loading this month's plan and spending…</p>
+        }
+        @case ('not-found') {
+          <div class="state-panel" role="status">
+            <p>{{ state.message }}</p>
+            <p>Create a monthly plan before reviewing income and spending. No zero balances are shown in place of a missing plan.</p>
+            <a routerLink="/monthly-planning">Create a monthly plan</a>
+          </div>
+        }
+        @case ('invalid-data') {
+          <div class="state-panel" role="alert">
+            <p>The server response did not match the monthly plan contract.</p>
+            <button type="button" class="retry-button" (click)="retry()">Try again</button>
+          </div>
+        }
+        @case ('error') {
+          <div class="state-panel" role="alert">
+            <p>{{ state.message }}</p>
+            <button type="button" class="retry-button" (click)="retry()">Try again</button>
+          </div>
+        }
+        @case ('ready') {
+          <section class="summary-grid" aria-label="Financial summary">
+            <article class="summary-card summary-card-balance">
+              <div class="card-icon" aria-hidden="true">₫</div>
+              <div>
+                <p class="card-label">Available balance</p>
+                <p class="card-value">{{ formatVnd(state.availableVnd) }}</p>
+                <p class="card-meta">{{ periodLabel(state.plan) }}</p>
+              </div>
+            </article>
+            <article class="summary-card">
+              <div class="card-icon income-icon" aria-hidden="true">+</div>
+              <div>
+                <p class="card-label">Monthly income</p>
+                <p class="card-value">{{ formatVnd(state.plan.monthlyIncomeVnd) }}</p>
+                <p class="card-meta">{{ periodLabel(state.plan) }}</p>
+              </div>
+            </article>
+            <article class="summary-card">
+              <div class="card-icon expense-icon" aria-hidden="true">−</div>
+              <div>
+                <p class="card-label">Spent this month</p>
+                <p class="card-value">{{ formatVnd(state.spentVnd) }}</p>
+                <p class="card-meta">{{ state.shareLabel }}</p>
+              </div>
+            </article>
+          </section>
+
+          <div class="dashboard-grid">
+            <section class="panel allocation-panel" aria-labelledby="allocation-title">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Monthly plan</p>
+                  <h2 id="allocation-title">Seven jar allocation</h2>
+                </div>
+                <a [routerLink]="['/monthly-plans', state.plan.year, state.plan.month]">View plan</a>
+              </div>
+              <div class="allocation-content">
+                <div class="donut" role="img" aria-label="100 percent allocated" [style.background]="allocationDonut(state.plan.jars)">
+                  <div class="donut-label"><strong>100%</strong><span>allocated</span></div>
+                </div>
+                <div class="legend">
+                  @for (jar of state.plan.jars; track jar.jarType) {
+                    <div class="legend-row">
+                      <span class="dot" [class]="jarClass(jar.jarType)"></span>
+                      <span>{{ jar.name }}</span>
+                      <strong>{{ jar.percentage }}%</strong>
+                    </div>
+                  }
+                </div>
+              </div>
+            </section>
+
+            <section class="panel activity-panel" aria-labelledby="activity-title">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Expenses</p>
+                  <h2 id="activity-title">Record spending</h2>
+                </div>
+                <a routerLink="/expenses/new" [queryParams]="{ expenseDate: expenseDate() }">Add expense</a>
+              </div>
+              <p class="panel-copy">
+                Individual expense lines are not returned by the API. Jar totals below use the spending response, and a new expense updates those totals after you save it.
+              </p>
+            </section>
+          </div>
+
+          <section class="panel refreshed-statistics" aria-labelledby="spending-title">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Spending by jar</p>
+                <h2 id="spending-title">Updated spending statistics</h2>
+              </div>
+              <a [routerLink]="['/monthly-plans', state.plan.year, state.plan.month, 'spending']">{{ periodLabel(state.plan) }}</a>
+            </div>
+            <p class="panel-copy">Each percentage is the value returned for that jar. The bars stop at 100% when spending is over budget.</p>
+            <app-spending-jar-list [jars]="state.spending.jars" />
+          </section>
+        }
+      }
+    }
+  </app-family-finance-shell>
+</main>

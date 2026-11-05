@@ -1,0 +1,52 @@
+<main class="spending-page">
+  <app-family-finance-shell activeItem="planning">
+    <section aria-labelledby="spending-title">
+      <a class="back-link" [routerLink]="backLink()"><span aria-hidden="true">‹</span> Back to allocation</a>
+      <h1 id="spending-title">Spending by jar</h1>
+      <p class="intro-copy">Planned budget, spent budget, and percentage used come from the server. Currency is VND.</p>
+
+      @if (view(); as state) {
+        @if (state.status !== 'invalid-route') {
+          <label class="month-label" for="spending-month">
+            Month
+            <input id="spending-month" type="month" [value]="monthValue()" (change)="changeMonth($event)" />
+          </label>
+        }
+
+        @switch (state.status) {
+          @case ('loading') {
+            <p class="state-panel" role="status">Loading spending for seven jars…</p>
+          }
+          @case ('invalid-route') {
+            <div class="state-panel" role="alert">
+              <p>That month is not valid.</p>
+              <a routerLink="/monthly-planning">Go to monthly planning</a>
+            </div>
+          }
+          @case ('not-found') {
+            <div class="state-panel" role="status">
+              <p>{{ state.message }}</p>
+              <a routerLink="/monthly-planning">Create a monthly plan</a>
+            </div>
+          }
+          @case ('invalid-data') {
+            <div class="state-panel" role="alert">
+              <p>The spending response did not include exactly seven jars.</p>
+              <button type="button" class="retry-button" (click)="retry()">Try again</button>
+            </div>
+          }
+          @case ('error') {
+            <div class="state-panel" role="alert">
+              <p>{{ state.message }}</p>
+              <button type="button" class="retry-button" (click)="retry()">Try again</button>
+            </div>
+          }
+          @case ('ready') {
+            <p class="period-context">{{ periodLabel(state.spending) }} · VND</p>
+            <app-spending-jar-list [jars]="state.spending.jars" />
+          }
+        }
+      }
+    </section>
+  </app-family-finance-shell>
+</main>
