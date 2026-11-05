@@ -1,0 +1,103 @@
+<main class="planning-page">
+  <app-family-finance-shell activeItem="planning">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a routerLink="/dashboard" aria-label="Home">Home</a>
+      <span class="breadcrumb-separator" aria-hidden="true">/</span>
+      <a routerLink="/monthly-planning">Monthly planning</a>
+      <span class="breadcrumb-separator" aria-hidden="true">/</span>
+      <span aria-current="page">Create monthly plan</span>
+    </nav>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-icon" aria-hidden="true">₫</div>
+      <div>
+        <h1 id="page-title">Create your monthly budget</h1>
+        <p class="intro-copy">Set your income for a month and we will prepare your seven budgeting jars.</p>
+      </div>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel details-panel" aria-labelledby="details-title">
+        <h2 id="details-title">Plan details</h2>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="field">
+            <label for="period">Month <span class="required">*</span></label>
+            <div class="control">
+              <input
+                id="period"
+                type="month"
+                formControlName="period"
+                [attr.aria-invalid]="fieldErrors().period ? true : null"
+                [attr.aria-describedby]="fieldErrors().period ? 'period-error' : null"
+              />
+            </div>
+            @if (fieldErrors().period) {
+              <p id="period-error" class="field-error">{{ fieldErrors().period }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="monthly-income">Monthly income <span class="required">*</span></label>
+            <div class="control">
+              <input
+                id="monthly-income"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                formControlName="monthlyIncomeVnd"
+                placeholder="30,000,000"
+                [attr.aria-invalid]="fieldErrors().monthlyIncomeVnd ? true : null"
+                [attr.aria-describedby]="fieldErrors().monthlyIncomeVnd ? 'income-error' : 'income-hint'"
+                (input)="onIncomeInput($event)"
+              />
+              <span class="currency-suffix">VND</span>
+            </div>
+            <p id="income-hint" class="hint">Enter a positive whole-VND amount. Commas are grouping only.</p>
+            @if (fieldErrors().monthlyIncomeVnd) {
+              <p id="income-error" class="field-error">{{ fieldErrors().monthlyIncomeVnd }}</p>
+            }
+          </div>
+
+          <hr class="form-divider" />
+          <output class="status-message" [class.error]="statusTone() === 'error'" role="status" aria-live="polite">
+            {{ statusMessage() }}
+          </output>
+          <button class="primary-button" type="submit" [disabled]="submitting() || defaultsState() !== 'ready'">
+            {{ submitting() ? 'Creating plan…' : 'Create monthly plan' }}
+          </button>
+          <p class="one-plan-note">One plan can be created per month.</p>
+        </form>
+      </section>
+
+      <section class="panel allocation-panel" aria-labelledby="allocation-title">
+        <div class="allocation-heading">
+          <div>
+            <p class="eyebrow">Fixed allocation</p>
+            <h2 id="allocation-title">Your default allocation</h2>
+          </div>
+          @if (defaultsState() === 'ready') {
+            <span class="allocation-status"><span class="status-check" aria-hidden="true">✓</span> {{ totalPercentage() }}% allocated</span>
+          }
+        </div>
+        <p class="allocation-copy">These rates come from the server and stay fixed for the monthly plan.</p>
+
+        @if (defaultsState() === 'loading') {
+          <p class="loading-copy">Loading default jars…</p>
+        } @else if (defaultsState() === 'ready') {
+          <ul class="allocation-grid" aria-label="Default jar allocation">
+            @for (jar of jars(); track jar.jarType) {
+              <li class="jar" [class]="'jar jar-' + jarClass(jar.jarType)">
+                <h3 class="jar-name">{{ jar.name }}</h3>
+                <p class="jar-rate">{{ jar.percentage }}%</p>
+                <p class="jar-logic">{{ jar.suggestedLogic }}</p>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="field-error">{{ statusMessage() }}</p>
+          <button type="button" class="retry-button" (click)="loadDefaults()">Try again</button>
+        }
+      </section>
+    </div>
+  </app-family-finance-shell>
+</main>
