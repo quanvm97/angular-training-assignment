@@ -1,0 +1,7 @@
+<app-family-finance-header [context]="context()" />
+<div class="shell">
+  <app-family-finance-sidebar [activeItem]="activeItem()" [expenseDate]="expenseDate()" />
+  <div class="page-main">
+    <ng-content />
+  </div>
+</div>
