@@ -1,0 +1,143 @@
+<main class="expense-page">
+  <app-family-finance-shell activeItem="expenses" context="Expenses">
+    <a class="back-link" routerLink="/dashboard"><span aria-hidden="true">‹</span> Back to home</a>
+    <section class="page-intro" aria-labelledby="expense-title">
+      <h1 id="expense-title">Add an expense</h1>
+      <p>Record a purchase and assign it to one jar in the monthly plan for that date.</p>
+    </section>
+
+    @if (planState(); as plan) {
+      <div class="expense-layout">
+        <form class="details-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <h2>Expense details</h2>
+          <p class="panel-copy">The expense date chooses the monthly plan. Jars come only from that plan.</p>
+          <div class="status" [class.success]="statusTone() === 'success'" [class.error]="statusTone() === 'error'" role="status" aria-live="polite">
+            {{ statusMessage() }}
+          </div>
+
+          <label for="expense-date">Expense date <span>*</span></label>
+          <input
+            id="expense-date"
+            type="date"
+            formControlName="expenseDate"
+            [attr.aria-invalid]="fieldErrors().expenseDate ? true : null"
+            [attr.aria-describedby]="fieldErrors().expenseDate ? 'date-error' : null"
+          />
+          @if (fieldErrors().expenseDate) {
+            <small id="date-error" class="field-error">{{ fieldErrors().expenseDate }}</small>
+          }
+
+          @if (plan.status === 'loading') {
+            <p class="hint">Loading jars for this date…</p>
+          } @else if (plan.status === 'not-found') {
+            <p class="field-error">Create a monthly plan before adding an expense.</p>
+            <a routerLink="/monthly-planning">Go to monthly planning</a>
+          } @else if (plan.status === 'invalid-date') {
+            <p class="field-error">Enter a valid date to load its monthly plan.</p>
+          } @else if (plan.status === 'invalid-data') {
+            <p class="field-error">The plan response did not match the expected seven-jar contract.</p>
+          } @else if (plan.status === 'error') {
+            <p class="field-error">{{ plan.message }}</p>
+            <button type="button" class="retry-button" (click)="dateReload()">Try again</button>
+          } @else {
+            <label for="jar-type">Jar <span>*</span></label>
+            <div class="select-control">
+              <select
+                id="jar-type"
+                formControlName="jarType"
+                [attr.aria-invalid]="fieldErrors().jarType ? true : null"
+                [attr.aria-describedby]="fieldErrors().jarType ? 'jar-error' : null"
+              >
+                <option value="">Select a jar</option>
+                @for (jar of plan.plan.jars; track jar.jarType) {
+                  <option [value]="jar.jarType">{{ jar.name }} · {{ jar.percentage }}%</option>
+                }
+              </select>
+              <span class="select-chevron" aria-hidden="true"></span>
+            </div>
+            @if (fieldErrors().jarType) {
+              <small id="jar-error" class="field-error">{{ fieldErrors().jarType }}</small>
+            }
+          }
+
+          <label for="amount">Amount <span>*</span></label>
+          <div class="amount-control">
+            <input
+              id="amount"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="1,250,000"
+              formControlName="amountVnd"
+              [attr.aria-invalid]="fieldErrors().amountVnd ? true : null"
+              [attr.aria-describedby]="fieldErrors().amountVnd ? 'amount-error' : 'amount-hint'"
+              (input)="onAmountInput($event)"
+            />
+            <span>VND</span>
+          </div>
+          <small id="amount-hint" class="hint">Enter a positive whole-VND amount.</small>
+          @if (fieldErrors().amountVnd) {
+            <small id="amount-error" class="field-error">{{ fieldErrors().amountVnd }}</small>
+          }
+
+          <label for="description">Description <span>*</span></label>
+          <input
+            id="description"
+            type="text"
+            maxlength="500"
+            placeholder="e.g. Weekly groceries"
+            formControlName="description"
+            [attr.aria-invalid]="fieldErrors().description ? true : null"
+            [attr.aria-describedby]="fieldErrors().description ? 'description-error' : null"
+          />
+          @if (fieldErrors().description) {
+            <small id="description-error" class="field-error">{{ fieldErrors().description }}</small>
+          }
+
+          <button class="save-button" type="submit" [disabled]="submitting() || plan.status !== 'ready'">
+            {{ submitting() ? 'Saving…' : 'Save expense' }}
+          </button>
+        </form>
+
+        <aside class="summary-panel" aria-labelledby="selected-jar-title">
+          <h2 id="selected-jar-title">Selected jar</h2>
+          <p class="panel-copy">Assigned to this expense</p>
+          @if (savedSummary(); as summary) {
+            <div class="jar-summary">
+              <div>
+                <strong>{{ summary.jarName }}</strong>
+                <span>{{ summary.percentage }}% of this month's income</span>
+                <span>Budget {{ formatVnd(summary.budgetVnd) }}</span>
+                <span>Spent {{ formatVnd(summary.spentVnd) }}</span>
+                <span>
+                  Remaining {{ formatVnd(summary.remainingVnd) }}
+                  @if (isOverBudgetAmount(summary.remainingVnd)) {
+                    <span class="over-budget-label">Over budget</span>
+                  }
+                </span>
+              </div>
+            </div>
+            @if (plan.status === 'ready') {
+              <a class="summary-link" [routerLink]="['/monthly-plans', plan.plan.year, plan.plan.month, 'spending']">View spending by jar</a>
+            }
+          } @else if (selectedJar(); as jar) {
+            <div class="jar-summary">
+              <div>
+                <strong>{{ jar.name }}</strong>
+                <span>{{ jar.percentage }}% · budget {{ formatVnd(jar.budgetVnd) }}</span>
+              </div>
+            </div>
+          } @else {
+            <div class="jar-summary empty">
+              <div>
+                <strong>Select a jar</strong>
+                <span>Choose a jar to assign this expense.</span>
+              </div>
+            </div>
+          }
+          <div class="refresh-note">Jar spending totals refresh after the expense is saved. Spent and remaining come from the server response.</div>
+        </aside>
+      </div>
+    }
+  </app-family-finance-shell>
+</main>
