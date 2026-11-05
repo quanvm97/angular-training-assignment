@@ -1,9 +1,12 @@
 .page-header {
+  position: sticky;
+  top: 0;
+  z-index: 4;
   min-height: 60px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 max(28px, calc((100vw - 1440px) / 2 + 28px)) 0 max(16px, calc((100vw - 1440px) / 2));
+  padding: 0 max(28px, calc((100% - 1440px) / 2 + 28px)) 0 max(16px, calc((100% - 1440px) / 2));
   color: var(--f1-surface);
   background: var(--f1-navy);
 }
@@ -12,10 +15,17 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   color: inherit;
   font-size: 1.125rem;
   font-weight: 700;
   text-decoration: none;
+
+  span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .brand-mark {
@@ -390,6 +400,7 @@ app-family-finance-sidebar {
 .panel-heading,
 .welcome {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
@@ -427,12 +438,12 @@ app-family-finance-sidebar {
 }
 
 .allocation-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 }
 
 .jar-grid,
 .refreshed-jar-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
 }
 
 .jar,
@@ -561,8 +572,10 @@ app-family-finance-sidebar {
 .month-label,
 .dashboard-month-label {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
   margin-top: 8px;
   color: var(--f1-slate);
   font-weight: 600;
@@ -573,6 +586,8 @@ app-family-finance-sidebar {
 .expense-page input[type='date'],
 .expense-page select,
 .expense-page input[type='text'] {
+  min-width: 0;
+  max-width: 100%;
   min-height: 42px;
   border: 1px solid var(--f1-grey);
   border-radius: 7px;
@@ -583,6 +598,8 @@ app-family-finance-sidebar {
 
 .month-label input,
 .dashboard-month-label input {
+  flex: 1 1 9rem;
+  width: auto;
   min-height: 36px;
   border: 0;
   background: transparent;
@@ -601,11 +618,17 @@ app-family-finance-sidebar {
 
 .income {
   display: grid;
-  grid-template-columns: 38px 1fr;
+  grid-template-columns: 38px minmax(0, 1fr);
   gap: 4px 10px;
   align-items: center;
+  min-width: 0;
   padding-right: 16px;
   border-right: 1px solid var(--f1-grey);
+}
+
+.income-value,
+.income-meta {
+  grid-column: 2;
 }
 
 .income-icon,
@@ -762,7 +785,15 @@ app-family-finance-sidebar {
   padding: 0 13px;
 }
 
-.amount-control input {
+.expense-page .amount-control {
+  width: 100%;
+  min-width: 0;
+}
+
+.expense-page .amount-control input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   border: 0;
 }
 
@@ -797,7 +828,7 @@ app-family-finance-sidebar {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 16px;
 }
 
@@ -823,7 +854,7 @@ app-family-finance-sidebar {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 16px;
   margin-top: 24px;
 }
@@ -840,6 +871,7 @@ app-family-finance-sidebar {
 
 .refreshed-jar-heading {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
   color: var(--f1-navy);
@@ -864,12 +896,38 @@ select:focus-visible {
   outline-offset: 2px;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1100px) {
+  app-family-finance-sidebar {
+    flex-basis: auto;
+  }
+
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 60px;
+    z-index: 3;
+    display: flex;
+    width: 100%;
+    height: auto;
+    gap: 8px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--f1-grey);
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 800px) {
   .content-grid,
   .summary,
   .expense-layout,
-  .summary-grid,
-  .dashboard-grid,
   .allocation,
   .allocation-content {
     grid-template-columns: 1fr;
@@ -884,36 +942,34 @@ select:focus-visible {
 }
 
 @media (max-width: 760px) {
-  app-family-finance-sidebar {
-    flex-basis: auto;
+  .page-header {
+    padding-right: 16px;
+    padding-left: 16px;
   }
 
-  .shell {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    display: flex;
-    width: 100%;
-    gap: 8px;
-    overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--f1-grey);
-  }
-
-  .nav-item {
-    flex: 0 0 auto;
-    margin-bottom: 0;
+  .header-context,
+  .user-name {
+    display: none;
   }
 
   .page-main {
     padding: 20px 16px 36px;
   }
 
-  .allocation-grid,
-  .jar-grid,
-  .refreshed-jar-list {
-    grid-template-columns: 1fr;
+  .panel,
+  .details-panel,
+  .summary-panel {
+    padding: 18px 16px 20px;
+  }
+
+  .intro {
+    gap: 12px;
+  }
+
+  .intro-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
   }
 
   .planning-page h1,
@@ -926,5 +982,10 @@ select:focus-visible {
 
   .welcome {
     flex-direction: column;
+  }
+
+  .primary-link,
+  .save-button {
+    width: 100%;
   }
 }
