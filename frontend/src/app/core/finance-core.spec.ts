@@ -7,6 +7,7 @@ import { expenseAmountDigits, planningIncomeDigits, validateExpense, validatePla
 import { allocationDonut, isOverBudget, jarClass, progressWidth } from './jar-presentation';
 import {
   canonicalWholeVnd,
+  formatAmountInputValue,
   formatGroupedAmount,
   formatPercent,
   formatVnd,
@@ -22,8 +23,14 @@ import { defaultJarsFixture, planFixture, spendingFixture } from '../testing/bud
 describe('money formatting', () => {
   it('normalizes grouped whole-VND amounts and rejects other symbols', () => {
     expect(normalizeWholeVnd(' 30,000,000 ')).toEqual({ digits: '30000000', invalidSymbols: false });
+    expect(normalizeWholeVnd('3,0000')).toEqual({ digits: '30000', invalidSymbols: false });
     expect(normalizeWholeVnd('')).toEqual({ digits: null, invalidSymbols: false });
     expect(normalizeWholeVnd('30.000').invalidSymbols).toBe(true);
+    expect(formatAmountInputValue('30000', 5)).toEqual({ value: '30,000', selection: 6 });
+    expect(formatAmountInputValue('3,0000', 6)).toEqual({ value: '30,000', selection: 6 });
+    expect(formatAmountInputValue('12a', 3)).toEqual({ value: '12', selection: 2 });
+    expect(formatAmountInputValue('30.000', 6)).toEqual({ value: '30,000', selection: 6 });
+    expect(formatAmountInputValue('abc', 3)).toEqual({ value: '', selection: 0 });
     expect(canonicalWholeVnd('00010')).toBe('10');
     expect(canonicalWholeVnd('000')).toBe('0');
     expect(planningIncomeDigits('10,000')).toBe('10000');

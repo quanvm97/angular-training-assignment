@@ -71,6 +71,7 @@
               formControlName="amountVnd"
               [attr.aria-invalid]="fieldErrors().amountVnd ? true : null"
               [attr.aria-describedby]="fieldErrors().amountVnd ? 'amount-error' : 'amount-hint'"
+              (keydown)="rejectNonDigitAmountKey($event)"
               (input)="onAmountInput($event)"
             />
             <span>VND</span>

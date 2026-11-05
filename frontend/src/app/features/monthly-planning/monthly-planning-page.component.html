@@ -48,6 +48,7 @@
                 placeholder="30,000,000"
                 [attr.aria-invalid]="fieldErrors().monthlyIncomeVnd ? true : null"
                 [attr.aria-describedby]="fieldErrors().monthlyIncomeVnd ? 'income-error' : 'income-hint'"
+                (keydown)="rejectNonDigitAmountKey($event)"
                 (input)="onIncomeInput($event)"
               />
               <span class="currency-suffix">VND</span>

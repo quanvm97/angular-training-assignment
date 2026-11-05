@@ -10,7 +10,7 @@ import { JarSpendingSummary, JarType, MonthlyPlanJar, MonthlyPlanResponse } from
 import { isJarType } from '../../core/budget-contract';
 import { CLOCK } from '../../core/clock';
 import { expenseAmountDigits, ExpenseFieldErrors, hasFieldErrors, validateExpense } from '../../core/form-rules';
-import { formatGroupedAmount, formatVnd, isOverBudgetAmount, normalizeWholeVnd } from '../../core/money';
+import { applyGroupedAmount, formatVnd, isOverBudgetAmount, rejectNonDigitAmountKey } from '../../core/money';
 import { isIsoDate, periodLabel, yearMonthFromIso } from '../../core/period';
 import { FamilyFinanceShellComponent } from '../../shared/shell/family-finance-shell.component';
 
@@ -94,17 +94,10 @@ export class AddExpensePageComponent {
     return state.plan.jars.find((jar) => jar.jarType === jarType) ?? null;
   }
 
-  onAmountInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const normalized = normalizeWholeVnd(input.value);
-    if (normalized.digits === null || normalized.invalidSymbols) {
-      return;
-    }
+  readonly rejectNonDigitAmountKey = rejectNonDigitAmountKey;
 
-    const formatted = formatGroupedAmount(normalized.digits);
-    if (formatted !== input.value) {
-      this.form.controls.amountVnd.setValue(formatted);
-    }
+  onAmountInput(event: Event): void {
+    applyGroupedAmount(event, (value) => this.form.controls.amountVnd.setValue(value, { emitEvent: false }));
   }
 
   submit(): void {

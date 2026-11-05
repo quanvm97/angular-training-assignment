@@ -8,7 +8,7 @@ import { BudgetPlanApiService } from '../../core/budget-plan-api.service';
 import { DefaultJar } from '../../core/budget.models';
 import { hasFieldErrors, planningIncomeDigits, PlanningFieldErrors, validatePlanning } from '../../core/form-rules';
 import { jarClass } from '../../core/jar-presentation';
-import { formatGroupedAmount, normalizeWholeVnd } from '../../core/money';
+import { applyGroupedAmount, rejectNonDigitAmountKey } from '../../core/money';
 import { parseMonthInput } from '../../core/period';
 import { FamilyFinanceShellComponent } from '../../shared/shell/family-finance-shell.component';
 
@@ -65,17 +65,10 @@ export class MonthlyPlanningPageComponent {
       });
   }
 
-  onIncomeInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const normalized = normalizeWholeVnd(input.value);
-    if (normalized.digits === null || normalized.invalidSymbols) {
-      return;
-    }
+  readonly rejectNonDigitAmountKey = rejectNonDigitAmountKey;
 
-    const formatted = formatGroupedAmount(normalized.digits);
-    if (formatted !== input.value) {
-      this.form.controls.monthlyIncomeVnd.setValue(formatted);
-    }
+  onIncomeInput(event: Event): void {
+    applyGroupedAmount(event, (value) => this.form.controls.monthlyIncomeVnd.setValue(value, { emitEvent: false }));
   }
 
   submit(): void {

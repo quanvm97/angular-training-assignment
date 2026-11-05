@@ -1,5 +1,4 @@
 const DIGITS = /^\d+$/;
-const GROUPED_DIGITS = /^\d{1,3}(,\d{3})*$/;
 
 export interface NormalizedAmount {
   digits: string | null;
@@ -12,11 +11,96 @@ export function normalizeWholeVnd(value: string): NormalizedAmount {
     return { digits: null, invalidSymbols: false };
   }
 
-  if (DIGITS.test(trimmed) || GROUPED_DIGITS.test(trimmed)) {
-    return { digits: trimmed.replaceAll(',', ''), invalidSymbols: false };
+  const withoutCommas = trimmed.replaceAll(',', '');
+  if (DIGITS.test(withoutCommas)) {
+    return { digits: withoutCommas, invalidSymbols: false };
   }
 
   return { digits: null, invalidSymbols: true };
+}
+
+const AMOUNT_EDIT_KEYS = new Set([
+  'Backspace',
+  'Delete',
+  'Tab',
+  'Escape',
+  'Enter',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+  'Home',
+  'End'
+]);
+
+export function rejectNonDigitAmountKey(event: KeyboardEvent): void {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1 || AMOUNT_EDIT_KEYS.has(event.key)) {
+    return;
+  }
+
+  if (!/^\d$/.test(event.key)) {
+    event.preventDefault();
+  }
+}
+
+export function applyGroupedAmount(event: Event, write: (value: string) => void): void {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const raw = input.value;
+  const selectionStart = input.selectionStart ?? raw.length;
+  const next = formatAmountInputValue(raw, selectionStart);
+  if (!next || next.value === raw) {
+    return;
+  }
+
+  write(next.value);
+  input.value = next.value;
+  input.setSelectionRange(next.selection, next.selection);
+  queueMicrotask(() => {
+    if (input.value === next.value) {
+      return;
+    }
+
+    write(next.value);
+    input.value = next.value;
+    input.setSelectionRange(next.selection, next.selection);
+  });
+}
+
+export function formatAmountInputValue(raw: string, selectionStart: number): { value: string; selection: number } | null {
+  const digits = raw.replaceAll(/\D/g, '');
+  if (digits.length === 0) {
+    return raw.length === 0 ? null : { value: '', selection: 0 };
+  }
+
+  const value = formatGroupedAmount(digits);
+  return { value, selection: indexAfterDigits(value, digitsBeforeIndex(raw, selectionStart)) };
+}
+
+function digitsBeforeIndex(value: string, index: number): number {
+  return value.slice(0, Math.max(0, index)).replaceAll(/\D/g, '').length;
+}
+
+function indexAfterDigits(formatted: string, digitCount: number): number {
+  if (digitCount <= 0) {
+    return 0;
+  }
+
+  let seen = 0;
+  for (let index = 0; index < formatted.length; index += 1) {
+    const code = formatted.charCodeAt(index);
+    if (code >= 48 && code <= 57) {
+      seen += 1;
+      if (seen === digitCount) {
+        return index + 1;
+      }
+    }
+  }
+
+  return formatted.length;
 }
 
 export function canonicalWholeVnd(digits: string): string {
